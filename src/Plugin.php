@@ -14,6 +14,7 @@ use function array_merge;
 use function dirname;
 use function file_exists;
 use function file_put_contents;
+use function getcwd;
 use function in_array;
 use function is_file;
 use function ksort;
@@ -22,6 +23,7 @@ use function md5_file;
 use function sprintf;
 use function strpos;
 use function var_export;
+use const DIRECTORY_SEPARATOR;
 
 final class Plugin implements PluginInterface, EventSubscriberInterface
 {
@@ -123,9 +125,14 @@ PHP;
 
 			$isRootPackage = $package === $rootPackage;
 			$packageName = $isRootPackage ? 'root (' . $package->getName() . ')' : $package->getName();
+
+			$installPath = $installationManager->getInstallPath($package);
+
 			$absoluteInstallPath = $isRootPackage
 				? dirname($composer->getConfig()->getConfigSource()->getName())
-				: $installationManager->getInstallPath($package);
+				: ($fs->isAbsolutePath($installPath)
+					? $installPath
+					: getcwd() . DIRECTORY_SEPARATOR . $installPath);
 			$data[$packageName] = [
 				'install_path' => $absoluteInstallPath,
 				'relative_install_path' => $fs->findShortestPath(dirname($generatedConfigFilePath), $absoluteInstallPath, true),
